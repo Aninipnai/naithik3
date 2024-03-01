@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #00bcd4, #4CAF50);
+            margin: 0;
+            padding: 0;
+            color: black; /* Set text color to black for better visibility */
+        }
+
+        #hangman-container {
+            margin: 50px auto;
+            padding: 20px;
+            border: 2px solid #333;
+            width: 400px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        #word-display {
+            margin: 20px 0;
+            font-size: 24px;
+        }
+
+        #letter-input {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #guess-button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #hint-button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #2196F3; /* Blue */
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #restart-button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #FF5722; /* Orange */
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #score {
+            font-size: 16px;
+            color: #8BC34A; /* Green */
+        }
+
+        #misses {
+            font-size: 16px;
+            color: #F44336; /* Red */
+        }
+
+        #hint-count {
+            font-size: 16px;
+            color: #2196F3; /* Blue */
+        }
+    </style>
+</head>
+<body>
+
+<div id="hangman-container">
+    <h1>Hangman Game</h1>
+    <div id="word-display"></div>
+    <input type="text" id="letter-input" placeholder="Enter a letter">
+    <button id="guess-button" onclick="guessLetter()">Guess</button>
+    <button id="hint-button" onclick="getHint()">Get Hint</button>
+    <button id="restart-button" onclick="restartGame()">Restart Game</button>
+    <p id="status">Guess the word!</p>
+    <p id="score">Score: 0</p>
+    <p id="misses">Misses: 0</p>
+    <p id="hint-count">Hints Used: 0</p>
+</div>
+
+<script>
+    // Array of words for the game
+    const words = ["hangman", "javascript", "programming", "web", "developer", "openai"];
+
+    // Select a random word from the array
+    let selectedWord = pickRandomWord();
+
+    // Initialize an array to store guessed letters
+    let guessedLetters = [];
+
+    // Initialize the display word with underscores
+    let displayWord = selectedWord.split('').map(letter => '_').join(' ');
+
+    // Initialize score and misses
+    let score = 0;
+    let misses = 0;
+
+    // Initialize hint count
+    let hintCount = 0;
+
+    // Display the initial word, score, and misses
+    updateDisplay();
+
+    // Function to pick a random word
+    function pickRandomWord() {
+        return words[Math.floor(Math.random() * words.length)];
+    }
+
+    // Function to handle letter guessing
+    function guessLetter() {
+        const letterInput = document.getElementById('letter-input').value.toLowerCase();
+
+        // Check if the input is a single letter
+        if (/^[a-z]$/.test(letterInput)) {
+            // Check if the letter has already been guessed
+            if (guessedLetters.includes(letterInput)) {
+                document.getElementById('status').innerText = 'You already guessed that letter. Try another one.';
+            } else {
+                guessedLetters.push(letterInput);
+
+                // Check if the guessed letter is in the selected word
+                if (selectedWord.includes(letterInput)) {
+                    // Update the display word with the guessed letter
+                    displayWord = selectedWord.split('').map(letter => (guessedLetters.includes(letter) ? letter : '_')).join(' ');
+
+                    // Check if the word is fully guessed
+                    if (!displayWord.includes('_')) {
+                        document.getElementById('status').innerText = 'Congratulations! You guessed the word!';
+                        // Increase score and select a new word for the next round
+                        score++;
+                        selectedWord = pickRandomWord();
+                        guessedLetters = [];
+                        displayWord = selectedWord.split('').map(letter => '_').join(' ');
+                        hintCount = 0; // Reset hint count on a new word
+                    }
+                } else {
+                    document.getElementById('status').innerText = 'Incorrect guess. Try again.';
+                    // Increase misses
+                    misses++;
+                }
+
+                // Update the word display, guessed letters, score, and misses
+                updateDisplay();
+            }
+        } else {
+            document.getElementById('status').innerText = 'Please enter a single letter.';
+        }
+
+        // Clear the letter input field
+        document.getElementById('letter-input').value = '';
+    }
+
+    // Function to get a hint (reveal one letter of the word)
+    function getHint() {
+        // Find the first unrevealed letter in the word
+        for (let i = 0; i < selectedWord.length; i++) {
+            const currentLetter = selectedWord[i];
+            if (!guessedLetters.includes(currentLetter)) {
+                guessedLetters.push(currentLetter);
+                displayWord = selectedWord.split('').map(letter => (guessedLetters.includes(letter) ? letter : '_')).join(' ');
+                hintCount++;
+                // Check if the word is fully guessed after revealing a letter
+                if (!displayWord.includes('_')) {
+                    document.getElementById('status').innerText = 'Congratulations! You guessed the word!';
+                    // Increase score and select a new word for the next round
+                    score++;
+                    selectedWord = pickRandomWord();
+                    guessedLetters = [];
+                    displayWord = selectedWord.split('').map(letter => '_').join(' ');
+                    hintCount = 0; // Reset hint count on a new word
+                }
+                updateDisplay();
+                return;
+            }
+        }
+    }
+
+    // Function to restart the game
+    function restartGame() {
+        selectedWord = pickRandomWord();
+        guessedLetters = [];
+        displayWord = selectedWord.split('').map(letter => '_').join(' ');
+        score = 0;
+        misses = 0;
+        hintCount = 0;
+        updateDisplay();
+        document.getElementById('status').innerText = 'Guess the word!';
+    }
+
+    // Function to update the display with the current word, score, and misses
+    function updateDisplay() {
+        document.getElementById('word-display').innerText = displayWord;
+        document.getElementById('score').innerText = 'Score: ' + score;
+        document.getElementById('misses').innerText = 'Misses: ' + misses;
+        document.getElementById('hint-count').innerText = 'Hints Used: ' + hintCount;
+    }
+</script>
+
+</body>
+</html>
+
